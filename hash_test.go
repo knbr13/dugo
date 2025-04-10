@@ -2,12 +2,13 @@ package main
 
 import (
 	"encoding/hex"
+	"fmt"
 	"io"
 	"os"
 	"path/filepath"
 	"testing"
 
-	"golang.org/x/crypto/blake2b"
+	"github.com/zeebo/xxh3"
 )
 
 func TestCreateFileHash(t *testing.T) {
@@ -31,22 +32,22 @@ func TestCreateFileHash(t *testing.T) {
 	}
 	contentFile.Close()
 
-	h, err := blake2b.New256(nil)
-	if err != nil {
-		t.Fatalf("Failed to create BLAKE2b hash: %v", err)
-	}
-	n, err := io.WriteString(h, content)
+	hasher := xxh3.New()
+
+	n, err := io.WriteString(hasher, content)
 	if err != nil {
 		t.Error(err)
 	}
 	if n != len(content) {
 		t.Errorf("not all bytes are written, expected to write %d bytes, written: %d", len(content), n)
 	}
-	expectedContentHash := hex.EncodeToString(h.Sum(nil))
 
-	emptyHash, err := blake2b.New256(nil)
+	hash := hasher.Sum128()
+	expectedContentHash := fmt.Sprintf("%016x%016x", hash.Hi, hash.Lo)
+
+	emptyHash := xxh3.New()
 	if err != nil {
-		t.Fatalf("Failed to create BLAKE2b hash for empty file: %v", err)
+		t.Fatalf("Failed to create XXH3 hash for empty file: %v", err)
 	}
 	expectedEmptyHash := hex.EncodeToString(emptyHash.Sum(nil))
 

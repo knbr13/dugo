@@ -1,13 +1,24 @@
 package main
 
 import (
-	"encoding/hex"
 	"fmt"
 	"io"
 	"os"
+	"sync"
 
-	"golang.org/x/crypto/blake2b"
+	"github.com/zeebo/xxh3"
 )
+
+const (
+	bufferSize = 32 * 1024
+)
+
+var bufPool = sync.Pool{
+	New: func() interface{} {
+		b := make([]byte, bufferSize)
+		return &b
+	},
+}
 
 func createFileHash(filePath string) (string, error) {
 	file, err := os.Open(filePath)
@@ -16,14 +27,28 @@ func createFileHash(filePath string) (string, error) {
 	}
 	defer file.Close()
 
-	hash, err := blake2b.New256(nil)
+	var hash string
+
+	hash, err = hashXXH3(file)
+
 	if err != nil {
-		return "", fmt.Errorf("failed to create BLAKE2b hash: %w", err)
+		return "", fmt.Errorf("hashing failed: %w", err)
 	}
 
-	if _, err := io.Copy(hash, file); err != nil {
-		return "", fmt.Errorf("failed to compute hash: %w", err)
+	return hash, nil
+
+}
+
+func hashXXH3(r io.Reader) (string, error) {
+	hasher := xxh3.New()
+	buffPtr := bufPool.Get().(*[]byte)
+	buff := *buffPtr
+	defer bufPool.Put(buffPtr)
+
+	if _, err := io.CopyBuffer(hasher, r, buff); err != nil {
+		return "", fmt.Errorf("XXH3 hashing failed: %w", err)
 	}
 
-	return hex.EncodeToString(hash.Sum(nil)), nil
+	hash := hasher.Sum128()
+	return fmt.Sprintf("%016x%016x", hash.Hi, hash.Lo), nil
 }
