@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/hex"
 	"fmt"
 	"io"
 	"os"
@@ -19,7 +18,7 @@ func TestCreateFileHash(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create empty test file: %v", err)
 	}
-	emptyFile.Close()
+	defer emptyFile.Close()
 
 	contentFilePath := filepath.Join(tempDir, "content.txt")
 	contentFile, err := os.Create(contentFilePath)
@@ -30,7 +29,7 @@ func TestCreateFileHash(t *testing.T) {
 	if _, err := contentFile.WriteString(content); err != nil {
 		t.Fatalf("Failed to write to test file: %v", err)
 	}
-	contentFile.Close()
+	defer contentFile.Close()
 
 	hasher := xxh3.New()
 
@@ -49,7 +48,8 @@ func TestCreateFileHash(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create XXH3 hash for empty file: %v", err)
 	}
-	expectedEmptyHash := hex.EncodeToString(emptyHash.Sum(nil))
+	hash = emptyHash.Sum128()
+	expectedEmptyHash := fmt.Sprintf("%016x%016x", hash.Hi, hash.Lo)
 
 	tests := []struct {
 		name           string
@@ -79,7 +79,7 @@ func TestCreateFileHash(t *testing.T) {
 			name:           "Directory instead of file",
 			filePath:       tempDir,
 			expectedHash:   "",
-			expectedErrMsg: "failed to compute hash",
+			expectedErrMsg: "hashing failed",
 		},
 	}
 
