@@ -103,7 +103,7 @@ Contributions are welcome! Here’s how you can help:
 
 ## License
 
-This project is licensed under the MIT License. See the [LICENSE](https://github.com/knbr13/dugo/blob/main/LICENSE) file for details.
+This project is licensed under the MIT License. See the [LICENSE](https://github.com/aladdin-io/dugo/blob/main/LICENSE) file for details.
 
 ---
 

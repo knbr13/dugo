@@ -1,4 +1,4 @@
-module github.com/knbr13/dugo
+module github.com/aladdin-io/dugo
 
 go 1.24.0
 
