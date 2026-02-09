@@ -1,4 +1,4 @@
-module github.com/aladdin-io/dugo
+module github.com/hrtsegv/dugo
 
 go 1.24.0
 
